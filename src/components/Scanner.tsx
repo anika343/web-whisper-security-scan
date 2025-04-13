@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
 import ScanForm from './ScanForm';
 import VulnerabilityList from './VulnerabilityList';
 import ScanStatus from './ScanStatus';
+import { VulnerabilityResult } from '@/types/vulnerability';
 
 const Scanner: React.FC = () => {
   const [results, setResults] = useState<VulnerabilityResult[]>([]);

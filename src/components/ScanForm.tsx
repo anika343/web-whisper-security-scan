@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { VulnerabilityResult } from '@/types/vulnerability';
 
 interface ScanFormProps {
   onScanComplete: (results: VulnerabilityResult[]) => void;
