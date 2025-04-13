@@ -12,13 +12,14 @@ export async function scanWebsite(url: string): Promise<ScanResponse> {
     // Step 1: Validate and format URL
     let targetUrl = url;
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      targetUrl = 'https://' + url;
+      targetUrl = 'http://' + url; // Default to http:// for local development
     }
 
     // Step 2: Determine if it's a local URL
     const isLocalUrl = targetUrl.includes('localhost') || 
                        targetUrl.includes('127.0.0.1') || 
-                       targetUrl.match(/^https?:\/\/\d+\.\d+\.\d+\.\d+/);
+                       targetUrl.match(/^https?:\/\/\d+\.\d+\.\d+\.\d+/) ||
+                       targetUrl.includes('xampp');
 
     // Step 3: Fetch website content
     let response;
@@ -34,7 +35,7 @@ export async function scanWebsite(url: string): Promise<ScanResponse> {
       } catch (error) {
         return {
           success: false,
-          message: "Cannot access local server. Make sure CORS is enabled on your local server.",
+          message: "Cannot access local server. Make sure CORS is enabled on your XAMPP server. See the notes below for configuration help.",
           vulnerabilities: []
         };
       }
