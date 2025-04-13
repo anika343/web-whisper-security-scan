@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,15 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Custom colors for our app
+				security: {
+					critical: '#FF3B30',
+					high: '#FF9500',
+					medium: '#FFCC00',
+					low: '#34C759',
+					info: '#5AC8FA',
+					none: '#8E8E93',
 				}
 			},
 			borderRadius: {
@@ -84,11 +94,21 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'pulse-scan': {
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0.5' }
+				},
+				'scan-line': {
+					'0%': { top: '0%' },
+					'100%': { top: '100%' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'pulse-scan': 'pulse-scan 1.5s ease-in-out infinite',
+				'scan-line': 'scan-line 2s ease-in-out infinite'
 			}
 		}
 	},
