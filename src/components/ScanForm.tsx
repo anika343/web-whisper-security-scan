@@ -5,17 +5,19 @@ import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { VulnerabilityResult } from '@/types/vulnerability';
+import { scanWebsite } from '@/services/scannerService';
 
 interface ScanFormProps {
   onScanComplete: (results: VulnerabilityResult[]) => void;
+  onScanStart: () => void;
 }
 
-const ScanForm: React.FC<ScanFormProps> = ({ onScanComplete }) => {
+const ScanForm: React.FC<ScanFormProps> = ({ onScanComplete, onScanStart }) => {
   const [url, setUrl] = useState<string>('');
   const [scanning, setScanning] = useState<boolean>(false);
   const { toast } = useToast();
 
-  const simulateScan = async () => {
+  const handleScan = async () => {
     if (!url) {
       toast({
         title: "Error",
@@ -26,66 +28,36 @@ const ScanForm: React.FC<ScanFormProps> = ({ onScanComplete }) => {
     }
 
     setScanning(true);
+    onScanStart();
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 3000));
-
-    // Mock vulnerability results
-    const mockResults: VulnerabilityResult[] = [
-      {
-        id: '1',
-        type: 'Stored XSS',
-        description: 'Stored Cross-Site Scripting vulnerability detected in comment form',
-        severity: 'critical',
-        location: '/blog/comments',
-        remediation: 'Implement input validation and output encoding. Filter out script tags and HTML special characters.',
-        code: '<input type="text" name="comment" value="<%= raw comment %>">'
-      },
-      {
-        id: '2',
-        type: 'Reflected XSS',
-        description: 'URL parameters are reflected without proper sanitization',
-        severity: 'high',
-        location: '/search?q=query',
-        remediation: 'Sanitize all user inputs before displaying them in the response. Use context-aware encoding.',
-        code: 'document.write("Search results for: " + location.search.split("=")[1]);'
-      },
-      {
-        id: '3',
-        type: 'DOM-based XSS',
-        description: 'Client-side JavaScript manipulates DOM using unsafe data from URL fragments',
-        severity: 'medium',
-        location: '/profile#settings',
-        remediation: 'Avoid using dangerous functions like innerHTML with untrusted data. Use textContent instead.',
-        code: 'element.innerHTML = location.hash.substring(1);'
-      },
-      {
-        id: '4',
-        type: 'JavaScript Injection',
-        description: 'User input is directly passed to eval()',
-        severity: 'critical',
-        location: '/calculator',
-        remediation: 'Never use eval() with user-controlled input. Use safer alternatives like Function constructor or avoid dynamic code execution.',
-        code: 'eval("calculate(" + userInput + ")");'
-      },
-      {
-        id: '5',
-        type: 'HTML Injection',
-        description: 'User profile information is inserted into page without escaping HTML',
-        severity: 'medium',
-        location: '/profile',
-        remediation: 'Escape HTML entities in user-provided content before inserting into the page.',
-        code: 'profileDiv.innerHTML = userData.bio;'
+    try {
+      const result = await scanWebsite(url);
+      
+      if (result.success) {
+        toast({
+          title: "Scan Complete",
+          description: `Found ${result.vulnerabilities.length} potential vulnerabilities on ${url}`
+        });
+        onScanComplete(result.vulnerabilities);
+      } else {
+        toast({
+          title: "Scan Failed",
+          description: result.message || "Failed to scan the website",
+          variant: "destructive"
+        });
+        onScanComplete([]);
       }
-    ];
-
-    setScanning(false);
-    onScanComplete(mockResults);
-    
-    toast({
-      title: "Scan Complete",
-      description: `Found ${mockResults.length} potential vulnerabilities on ${url}`,
-    });
+    } catch (error) {
+      console.error("Error during scan:", error);
+      toast({
+        title: "Scan Error",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive"
+      });
+      onScanComplete([]);
+    } finally {
+      setScanning(false);
+    }
   };
 
   return (
@@ -100,7 +72,7 @@ const ScanForm: React.FC<ScanFormProps> = ({ onScanComplete }) => {
           className="flex-grow"
         />
         <Button 
-          onClick={simulateScan} 
+          onClick={handleScan} 
           disabled={scanning || !url}
           className="min-w-[120px]"
         >
@@ -113,7 +85,7 @@ const ScanForm: React.FC<ScanFormProps> = ({ onScanComplete }) => {
         </Button>
       </div>
       <p className="text-xs text-muted-foreground mt-2">
-        Note: This is a simulation. No actual scanning will be performed.
+        Note: Only publicly accessible websites can be scanned. Some sites may block scanning attempts.
       </p>
     </div>
   );

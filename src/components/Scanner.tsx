@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import ScanForm from './ScanForm';
 import VulnerabilityList from './VulnerabilityList';
@@ -25,6 +26,7 @@ const Scanner: React.FC = () => {
     <div className="w-full flex flex-col gap-6 py-6">
       <ScanForm 
         onScanComplete={handleScanComplete}
+        onScanStart={handleScanStart}
       />
       
       {scanning && (
@@ -38,7 +40,8 @@ const Scanner: React.FC = () => {
       {scanComplete && results.length === 0 && (
         <div className="text-center p-8 bg-green-50 rounded-lg border border-green-100">
           <h3 className="text-xl font-medium text-green-700">No Vulnerabilities Found!</h3>
-          <p className="text-green-600 mt-2">Great news! No XSS vulnerabilities were detected.</p>
+          <p className="text-green-600 mt-2">Great news! No obvious XSS vulnerabilities were detected.</p>
+          <p className="text-sm text-muted-foreground mt-4">Note: This scan is limited and doesn't guarantee complete security. Consider professional penetration testing for critical applications.</p>
         </div>
       )}
     </div>
