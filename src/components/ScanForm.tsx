@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Info } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { VulnerabilityResult } from '@/types/vulnerability';
 import { scanWebsite } from '@/services/scannerService';
@@ -66,7 +66,7 @@ const ScanForm: React.FC<ScanFormProps> = ({ onScanComplete, onScanStart }) => {
       <div className="flex flex-col sm:flex-row gap-2">
         <Input
           type="url"
-          placeholder="https://example.com"
+          placeholder="https://example.com or http://localhost:3000"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           className="flex-grow"
@@ -84,9 +84,16 @@ const ScanForm: React.FC<ScanFormProps> = ({ onScanComplete, onScanStart }) => {
           ) : "Scan Now"}
         </Button>
       </div>
-      <p className="text-xs text-muted-foreground mt-2">
-        Note: Only publicly accessible websites can be scanned. Some sites may block scanning attempts.
-      </p>
+      <div className="text-xs text-muted-foreground mt-2 space-y-1">
+        <p>
+          <Info className="inline h-3 w-3 mr-1" />
+          The scanner works with both public websites and locally hosted sites.
+        </p>
+        <p>
+          <Info className="inline h-3 w-3 mr-1" />
+          For local sites, CORS must be enabled on your development server.
+        </p>
+      </div>
     </div>
   );
 };

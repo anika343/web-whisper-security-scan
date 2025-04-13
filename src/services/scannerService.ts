@@ -9,20 +9,45 @@ interface ScanResponse {
 
 export async function scanWebsite(url: string): Promise<ScanResponse> {
   try {
-    // Step 1: Validate URL format
+    // Step 1: Validate and format URL
     let targetUrl = url;
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
       targetUrl = 'https://' + url;
     }
 
-    // Make a CORS proxy request to fetch the website content
-    const corsProxy = "https://corsproxy.io/?";
-    const response = await fetch(`${corsProxy}${encodeURIComponent(targetUrl)}`, {
-      method: 'GET',
-      headers: {
-        'Accept': 'text/html',
-      },
-    });
+    // Step 2: Determine if it's a local URL
+    const isLocalUrl = targetUrl.includes('localhost') || 
+                       targetUrl.includes('127.0.0.1') || 
+                       targetUrl.match(/^https?:\/\/\d+\.\d+\.\d+\.\d+/);
+
+    // Step 3: Fetch website content
+    let response;
+    if (isLocalUrl) {
+      try {
+        // Direct fetch for local URLs (will work if CORS is enabled on local server)
+        response = await fetch(targetUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'text/html',
+          },
+        });
+      } catch (error) {
+        return {
+          success: false,
+          message: "Cannot access local server. Make sure CORS is enabled on your local server.",
+          vulnerabilities: []
+        };
+      }
+    } else {
+      // Use CORS proxy for public websites
+      const corsProxy = "https://corsproxy.io/?";
+      response = await fetch(`${corsProxy}${encodeURIComponent(targetUrl)}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/html',
+        },
+      });
+    }
 
     if (!response.ok) {
       throw new Error(`Failed to fetch website: ${response.status} ${response.statusText}`);
