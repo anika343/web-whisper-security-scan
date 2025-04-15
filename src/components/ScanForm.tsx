@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Info } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { Loader2, Info, AlertTriangle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { VulnerabilityResult } from '@/types/vulnerability';
 import { scanWebsite } from '@/services/scannerService';
 import { 
@@ -12,6 +12,7 @@ import {
   AccordionItem,
   AccordionTrigger
 } from "@/components/ui/accordion";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 interface ScanFormProps {
   onScanComplete: (results: VulnerabilityResult[]) => void;
@@ -21,6 +22,7 @@ interface ScanFormProps {
 const ScanForm: React.FC<ScanFormProps> = ({ onScanComplete, onScanStart }) => {
   const [url, setUrl] = useState<string>('');
   const [scanning, setScanning] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleScan = async () => {
@@ -34,6 +36,7 @@ const ScanForm: React.FC<ScanFormProps> = ({ onScanComplete, onScanStart }) => {
     }
 
     setScanning(true);
+    setErrorMessage(null);
     onScanStart();
     
     try {
@@ -46,18 +49,20 @@ const ScanForm: React.FC<ScanFormProps> = ({ onScanComplete, onScanStart }) => {
         });
         onScanComplete(result.vulnerabilities);
       } else {
+        setErrorMessage(result.message || "Failed to scan the website");
         toast({
           title: "Scan Failed",
-          description: result.message || "Failed to scan the website",
+          description: "See details below for more information",
           variant: "destructive"
         });
         onScanComplete([]);
       }
     } catch (error) {
       console.error("Error during scan:", error);
+      setErrorMessage(error instanceof Error ? error.message : "An unknown error occurred");
       toast({
         title: "Scan Error",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
+        description: "See details below for more information",
         variant: "destructive"
       });
       onScanComplete([]);
@@ -90,7 +95,18 @@ const ScanForm: React.FC<ScanFormProps> = ({ onScanComplete, onScanStart }) => {
           ) : "Scan Now"}
         </Button>
       </div>
-      <div className="text-xs text-muted-foreground mt-2 space-y-1">
+      
+      {errorMessage && (
+        <Alert variant="destructive" className="mt-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Scan Failed</AlertTitle>
+          <AlertDescription>
+            {errorMessage}
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      <div className="text-xs text-muted-foreground mt-4 space-y-1">
         <p>
           <Info className="inline h-3 w-3 mr-1" />
           The scanner works with both public websites and locally hosted sites (including XAMPP).

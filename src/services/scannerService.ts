@@ -23,6 +23,8 @@ export async function scanWebsite(url: string): Promise<ScanResponse> {
 
     // Step 3: Fetch website content
     let response;
+    let responseData;
+    
     if (isLocalUrl) {
       try {
         // Direct fetch for local URLs (will work if CORS is enabled on local server)
@@ -42,20 +44,57 @@ export async function scanWebsite(url: string): Promise<ScanResponse> {
     } else {
       // Use CORS proxy for public websites
       const corsProxy = "https://corsproxy.io/?";
-      response = await fetch(`${corsProxy}${encodeURIComponent(targetUrl)}`, {
-        method: 'GET',
-        headers: {
-          'Accept': 'text/html',
-        },
-      });
+      const proxyUrl = `${corsProxy}${encodeURIComponent(targetUrl)}`;
+      
+      try {
+        response = await fetch(proxyUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'text/html',
+          },
+        });
+        
+        // Check for JSON response which might indicate an error
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          responseData = await response.json();
+          
+          // Check for specific error messages
+          if (responseData.error) {
+            if (responseData.error.code === 403) {
+              return {
+                success: false,
+                message: "The CORS proxy is currently blocked in your region. Try using a local development server instead, or try another website.",
+                vulnerabilities: []
+              };
+            }
+            
+            return {
+              success: false,
+              message: `CORS proxy error: ${responseData.error.message || "Unknown error"}`,
+              vulnerabilities: []
+            };
+          }
+        }
+      } catch (error) {
+        return {
+          success: false,
+          message: "Failed to connect to the CORS proxy. Please check your internet connection or try scanning a local website.",
+          vulnerabilities: []
+        };
+      }
     }
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch website: ${response.status} ${response.statusText}`);
+      return {
+        success: false,
+        message: `Failed to fetch website: ${response.status} ${response.statusText}. Please check the URL and try again.`,
+        vulnerabilities: []
+      };
     }
 
-    // Get the HTML content
-    const htmlContent = await response.text();
+    // Get the HTML content (if we haven't already parsed it as JSON)
+    const htmlContent = responseData ? JSON.stringify(responseData) : await response.text();
     
     // Analyze for XSS vulnerabilities
     const vulnerabilities = analyzeForXssVulnerabilities(htmlContent, targetUrl);
