@@ -109,3 +109,21 @@
   opacity: 0.7;
   z-index: 10;
 }
+
+@keyframes scan-line {
+  0% { top: 0; }
+  100% { top: 100%; }
+}
+
+@keyframes pulse-scan {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-scan-line {
+  animation: scan-line 2s ease-in-out infinite;
+}
+
+.animate-pulse-scan {
+  animation: pulse-scan 1.5s ease-in-out infinite;
+}
