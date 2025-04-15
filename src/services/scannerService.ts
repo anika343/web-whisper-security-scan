@@ -7,7 +7,7 @@ interface ScanResponse {
   message?: string;
 }
 
-export async function scanWebsite(url: string): Promise<ScanResponse> {
+export async function scanWebsite(url: string, bypassCorsProxy: boolean = false): Promise<ScanResponse> {
   try {
     // Step 1: Validate and format URL
     let targetUrl = url;
@@ -25,9 +25,10 @@ export async function scanWebsite(url: string): Promise<ScanResponse> {
     let response;
     let responseData;
     
-    if (isLocalUrl) {
+    if (isLocalUrl || bypassCorsProxy) {
       try {
         // Direct fetch for local URLs (will work if CORS is enabled on local server)
+        // or when user chooses to bypass CORS proxy
         response = await fetch(targetUrl, {
           method: 'GET',
           headers: {
@@ -37,7 +38,9 @@ export async function scanWebsite(url: string): Promise<ScanResponse> {
       } catch (error) {
         return {
           success: false,
-          message: "Cannot access local server. Make sure CORS is enabled on your XAMPP server. See the notes below for configuration help.",
+          message: isLocalUrl 
+            ? "Cannot access local server. Make sure CORS is enabled on your XAMPP server. See the notes below for configuration help."
+            : "Cannot access the website directly. The site may have CORS restrictions. Try disabling the 'Bypass CORS proxy' option.",
           vulnerabilities: []
         };
       }
@@ -64,7 +67,7 @@ export async function scanWebsite(url: string): Promise<ScanResponse> {
             if (responseData.error.code === 403) {
               return {
                 success: false,
-                message: "The CORS proxy is currently blocked in your region. Try using a local development server instead, or try another website.",
+                message: "The CORS proxy is currently blocked in your region. Try enabling the 'Bypass CORS proxy' option above, or use a local development server instead.",
                 vulnerabilities: []
               };
             }
@@ -79,7 +82,7 @@ export async function scanWebsite(url: string): Promise<ScanResponse> {
       } catch (error) {
         return {
           success: false,
-          message: "Failed to connect to the CORS proxy. Please check your internet connection or try scanning a local website.",
+          message: "Failed to connect to the CORS proxy. Please try enabling the 'Bypass CORS proxy' option above, or scan a local website.",
           vulnerabilities: []
         };
       }

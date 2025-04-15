@@ -13,6 +13,7 @@ import {
   AccordionTrigger
 } from "@/components/ui/accordion";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Switch } from "@/components/ui/switch";
 
 interface ScanFormProps {
   onScanComplete: (results: VulnerabilityResult[]) => void;
@@ -23,6 +24,7 @@ const ScanForm: React.FC<ScanFormProps> = ({ onScanComplete, onScanStart }) => {
   const [url, setUrl] = useState<string>('');
   const [scanning, setScanning] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [bypassCorsProxy, setBypassCorsProxy] = useState<boolean>(false);
   const { toast } = useToast();
 
   const handleScan = async () => {
@@ -40,7 +42,7 @@ const ScanForm: React.FC<ScanFormProps> = ({ onScanComplete, onScanStart }) => {
     onScanStart();
     
     try {
-      const result = await scanWebsite(url);
+      const result = await scanWebsite(url, bypassCorsProxy);
       
       if (result.success) {
         toast({
@@ -94,6 +96,20 @@ const ScanForm: React.FC<ScanFormProps> = ({ onScanComplete, onScanStart }) => {
             </>
           ) : "Scan Now"}
         </Button>
+      </div>
+      
+      <div className="flex items-center space-x-2 mt-3">
+        <Switch 
+          id="bypass-cors" 
+          checked={bypassCorsProxy} 
+          onCheckedChange={setBypassCorsProxy} 
+        />
+        <label 
+          htmlFor="bypass-cors" 
+          className="text-sm cursor-pointer"
+        >
+          Bypass CORS proxy (for regions where proxy is blocked)
+        </label>
       </div>
       
       {errorMessage && (
